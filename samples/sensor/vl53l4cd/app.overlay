@@ -1,0 +1,25 @@
+/*
+ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+ * SPDX-License-Identifier: Apache-2.0
+*/
+
+/ {
+    aliases {
+        distance0 = &vl53l4cd_0;
+    };
+};
+
+&i2c1 {
+    status = "okay";
+};
+
+
+&i2c1 {
+	vl53l4cd_0: vl53l4cd@29 {
+		compatible = "st,vl53l4cd";
+		reg = <0x29>;
+		status = "okay";
+		xshut-gpios = <&gpio0 28 GPIO_ACTIVE_HIGH>;
+		int-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
+	};
+};

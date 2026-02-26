@@ -1,5 +1,6 @@
 # Copyright (c) 2024 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
+add_subdirectory_ifdef(CONFIG_VL53L4CD VL53L4CD)
 
 # zephyr-keep-sorted-start
 add_subdirectory_ifdef(CONFIG_HAS_STMEMSC stmemsc)

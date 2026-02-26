@@ -1,0 +1,18 @@
+sample:
+  name: Sample for MEMS sensors VL53L4CD
+  description: This sample demonstrates the use of the VL53L4CD MEMS sensor.
+tests:
+  sample.sensor.vl53l4cd:
+    depends_on:
+      - i2c
+      - vl53l4cd
+    tags:
+      - sensors
+    integration_platforms:
+      - disco_l475_iot1
+    harness: console
+    harness_config:
+      type: multi_line
+      regex:
+        - "prox is .*"
+        - "distance is .*"

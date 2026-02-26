@@ -1,0 +1,54 @@
+menu "VL53L0X time of flight sensor configuration options"
+
+# Copyright (c) 2023 Prosaris Solutions Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config VL53L4CD
+	bool "VL53L4CD time of flight sensor"
+	default n
+	# depends on DT_HAS_ST_VL53L4CD_ENABLED
+	select I2C
+	help
+	  Enable driver for VL53L4CD I2C-based time of flight sensor.
+
+if VL53L4CD
+
+config VL53L4CD_INTERRUPT_MODE
+	bool "Use interrupt mode for VL53L4CD time of flight sensor"
+	default y
+	depends on GPIO
+	help
+	  Enable interrupt mode for VL53L4CD time of flight sensor. Otherwise,
+	  the driver will use the polling method.
+
+config VL53L4CD_XSHUT
+	bool "Use xshut pin on VL53L4CD time of flight sensor"
+	depends on GPIO
+	help
+	  Enable to use the xshut pin on the VL53L4CD. If not, the pin should be
+	  connected to VDD.
+
+config VL53L4CD_LOG_LEVEL
+    int "VL53L4CD driver log level"
+    default 4
+    depends on VL53L4CD
+    help
+      Log level for the VL53L4CD driver.
+
+config VL53L4CD_I2C_DETECT
+	bool "Print valid addresses on the i2c bus"
+	default n
+	depends on VL53L4CD
+	help
+		Prints the addresses on the VLC53L4CD i2c bus that are in use.
+
+config VL53L4CD_I2C_FAST_MODE_PLUS
+	bool "Extra setting for i2c bus rate > 1Mhz"
+	default n
+	depends on VL53L4CD
+	help
+		If the macro below is defined, the device will be programmed to run
+		with I2C Fast Mode Plus (up to 1MHz). Otherwise, default max value is 400kHz.
+
+endif # VL53L4CD
+endmenu

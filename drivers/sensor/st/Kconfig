@@ -1,5 +1,6 @@
 # Copyright (c) 2024 Analog Devices, Inc.
 # SPDX-License-Identifier: Apache-2.0
+source "drivers/sensor/st/vl53l4cd/Kconfig"
 
 # zephyr-keep-sorted-start
 source "drivers/sensor/st/hts221/Kconfig"
