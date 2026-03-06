@@ -5,10 +5,12 @@
  */
 #pragma once
 
+#include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/gpio.h>
+
 
 typedef struct {
 	const struct i2c_dt_spec *i2c;
@@ -18,5 +20,3 @@ typedef struct {
 	const struct device *dev;
 #endif
 } vl53l4cd_dev_t;
-
-

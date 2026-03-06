@@ -1,4 +1,0 @@
-name: vl23l4cd
-build:
-  cmake: ./
-  kconfig: ./Kconfig

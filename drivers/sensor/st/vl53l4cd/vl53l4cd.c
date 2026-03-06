@@ -5,19 +5,18 @@
  */
 #define DT_DRV_COMPAT st_vl53l4cd
 
-#include "vl53l4cd_sensor.h"
+#include "vl53l4cd.h"
 #include "vl53l4cd_api.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/init.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/devicetree.h>
 
-LOG_MODULE_REGISTER(VL53L4CD, CONFIG_VL53L4CD_LOG_LEVEL);
+LOG_MODULE_REGISTER(VL53L4CD, CONFIG_SENSOR_LOG_LEVEL);
 
 struct vl53l4cd_config {
 	struct i2c_dt_spec i2c;
@@ -154,6 +153,93 @@ static int vl53l4cd_attr_set(const struct device *dev,
 	return -ENOTSUP;
 }
 
+#ifdef CONFIG_VL53L4CD_INTERRUPT_MODE
+
+static int vl53l4cd_read_sensor(vl53l4cd_dev_t  *drv_data)
+{
+	VL53L4CD_ResultsData_t results;
+	int status = VL53L4CD_ERROR_NONE;
+
+	if(! VL53L4CD_IsDataReady(drv_data)) {
+		LOG_DBG("VL53L4CD data not ready");
+		return EAGAIN;
+	}
+
+	/* (Mandatory) Clear HW interrupt to restart measurements */
+	if (VL53L4CD_ClearInterrupt(drv_data)) {
+		LOG_ERR("Failed to clear interrupt");
+		return -status;
+	}
+
+	/* Read measured distance. RangeStatus = 0 means valid data */
+	if (VL53L4CD_GetResult(drv_data, &results)) {
+		LOG_ERR("Failed to get result (range)");
+		return -status;
+	}
+
+	LOG_DBG("Status = %6u, Distance = %6u, Signal = %6u",
+		results.range_status,
+		results.distance_mm,
+		results.signal_per_spad_kcps);
+
+
+	if( results.range_status != 0) {
+		LOG_DBG("VL53L4CD measurement is not valid (status %u)", results.range_status);
+		return EAGAIN;
+	}
+
+	return 0;
+}
+
+static void vl53l4cd_worker(struct k_work *work)
+{
+	vl53l4cd_dev_t  *drv_data = CONTAINER_OF(work, vl53l4cd_dev_t, work);
+
+	vl53l4cd_read_sensor(drv_data);
+}
+
+static void vl53l4cd_gpio_callback(const struct device *dev,
+		struct gpio_callback *cb, uint32_t pins)
+{
+	vl53l4cd_dev_t *drv_data = CONTAINER_OF(cb, vl53l4cd_dev_t, gpio_cb);
+
+	k_work_submit(&drv_data->work);
+}
+
+static int vl53l4cd_init_interrupt(const struct device *dev)
+{
+	vl53l4cd_dev_t *drv_data = dev->data;
+	const struct vl53l4cd_config *config = dev->config;
+	int ret;
+
+	drv_data->dev = dev;
+
+	if (!gpio_is_ready_dt(&config->gpio1)) {
+		LOG_ERR("%s: device %s is not ready", dev->name, config->gpio1.port->name);
+		return -ENODEV;
+	}
+
+	ret = gpio_pin_configure_dt(&config->gpio1, GPIO_INPUT | GPIO_PULL_UP);
+	if (ret < 0) {
+		LOG_ERR("[%s] Unable to configure GPIO interrupt", dev->name);
+		return -EIO;
+	}
+
+	gpio_init_callback(&drv_data->gpio_cb,
+					vl53l4cd_gpio_callback,
+					BIT(config->gpio1.pin));
+
+	ret = gpio_add_callback(config->gpio1.port, &drv_data->gpio_cb);
+	if (ret < 0) {
+		LOG_ERR("Failed to set gpio callback!");
+		return -EIO;
+	}
+
+	drv_data->work.handler = vl53l4cd_worker;
+
+	return 0;
+}
+#endif
 
 static DEVICE_API(sensor, vl53l4cd_api_funcs) = {
 	.sample_fetch = vl53l4cd_sample_fetch,
@@ -192,6 +278,17 @@ static int vl53l4cd_init(const struct device *dev)
 		k_sleep(K_MSEC(2));
 	}
 #endif
+
+#ifdef CONFIG_VL53L4CD_INTERRUPT_MODE
+	if (config->gpio1.port) {
+		ret = vl53l4cd_init_interrupt(dev);
+		if (ret < 0) {
+			LOG_ERR("Failed to initialize interrupt!");
+			return -EIO;
+		}
+	}
+#endif
+
 	LOG_DBG("Checking sensor presence");
 	ret = VL53L4CD_detect(drv_data);
 	if (ret) {

@@ -1,16 +1,17 @@
 /*
  * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
  * SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright (c) 2026 Alex Cave <alex.cave@outlook.com.au>
+ */
 
 / {
-    aliases {
-        distance0 = &vl53l4cd_0;
-    };
+	aliases {
+		distance0 = &vl53l4cd_0;
+	};
 };
 
 &i2c1 {
-    status = "okay";
+	status = "okay";
 };
 
 

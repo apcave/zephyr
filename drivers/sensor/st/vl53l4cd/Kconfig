@@ -1,12 +1,16 @@
-menu "VL53L0X time of flight sensor configuration options"
+# VL53L0X time of flight sensor configuration options
 
-# Copyright (c) 2023 Prosaris Solutions Inc.
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# Copyright (c) 2026 Alex Cave <alex.cave@outlook.com.au>
 # SPDX-License-Identifier: Apache-2.0
 
-config VL53L4CD
+menuconfig VL53L4CD
 	bool "VL53L4CD time of flight sensor"
-	default n
-	# depends on DT_HAS_ST_VL53L4CD_ENABLED
+	default y
+	depends on DT_HAS_ST_VL53L4CD_ENABLED
+	depends on ZEPHYR_HAL_ST_MODULE
+	depends on LOG
+	depends on SENSOR
 	select I2C
 	help
 	  Enable driver for VL53L4CD I2C-based time of flight sensor.
@@ -51,4 +55,3 @@ config VL53L4CD_I2C_FAST_MODE_PLUS
 		with I2C Fast Mode Plus (up to 1MHz). Otherwise, default max value is 400kHz.
 
 endif # VL53L4CD
-endmenu
