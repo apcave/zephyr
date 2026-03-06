@@ -11,7 +11,6 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/gpio.h>
 
-
 typedef struct {
 	const struct i2c_dt_spec *i2c;
 #ifdef CONFIG_VL53L4CD_INTERRUPT_MODE
